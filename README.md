@@ -10,6 +10,7 @@ FIXME
 * Create intent schema and sample utterances
 * Support pausing and resuming
 * Offer to start a timer on status request if one isn't set
+* Update README (meta)
 
 ## License
 
