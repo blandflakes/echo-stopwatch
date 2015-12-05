@@ -6,6 +6,10 @@ An echo application that...
 
 FIXME
 
+## Observations
+
+Switching on intent name is common - should provide a better mechanism for this.
+
 ## TODO
 * Create intent schema and sample utterances
 * Support pausing and resuming

@@ -72,7 +72,7 @@
       (watch-status existing-watch now session)
       (new-watch user-id now session))))
 
-(defmulti handle-intent (fn [request session] (get request "intent")))
+(defmulti handle-intent (fn [request session] (get-in request ["intent" "name"])))
 
 (defmethod handle-intent "StartStopwatch"
   [request session]
