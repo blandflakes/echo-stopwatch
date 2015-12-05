@@ -59,7 +59,7 @@
                                      (format-duration watch now))}))
 
 (defn- no-watch
-  []
+  [session]
   (response/respond session {:should-end? true
                              :speech (response/simple-speech "No stopwatch is set.")}))
 
@@ -87,7 +87,7 @@
         existing-watch (get @watches user-id)]
     (if existing-watch
       (watch-status existing-watch now session)
-      (no-watch))))
+      (no-watch session))))
        
 (defmethod handle-intent "StopStopwatch"
   [request session]
