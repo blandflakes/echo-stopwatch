@@ -46,7 +46,7 @@
    (alter watches assoc user-id now))
   (response/respond session {:should-end? true
                              :speech (response/simple-speech "Starting a new stopwatch.")
-                             :card (response/simple-card "Started stopwatch")}))
+                             :card (response/simple-card "Started stopwatch" nil nil)}))
 
 (defn- watch-status
   [watch now session]
