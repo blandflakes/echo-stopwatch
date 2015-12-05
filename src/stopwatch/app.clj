@@ -58,6 +58,11 @@
                                      "Duration"
                                      (format-duration watch now))}))
 
+(defn already-watch
+  [session]
+  (response/respond session {:should-end? true
+                             :speech (response/simple-speech "You already have a stopwatch set.")}))
+
 (defn- no-watch
   [session]
   (response/respond session {:should-end? true
@@ -77,8 +82,11 @@
 (defmethod handle-intent "StartStopwatch"
   [request session]
   (let [now (t/utc-now)
-        user-id (get-in session ["user" "userId"])]
-    (new-watch user-id now session)))
+        user-id (get-in session ["user" "userId"])
+        existing-watch (get @watches user-id)]
+    (if existing-watch
+      (already-watch session)
+      (new-watch user-id now session))))
 
 (defmethod handle-intent "StopwatchStatus"
   [request session]
