@@ -45,13 +45,13 @@
   (dosync
    (alter watches assoc user-id now))
   (response/respond session {:should-end? true
-                             :speech (response/simple-speech "Starting a new stopwatch.")
+                             :speech (response/plaintext-speech "Starting a new stopwatch.")
                              :card (response/simple-card "Started stopwatch" nil nil)}))
 
 (defn- watch-status
   [watch now session]
   (response/respond session {:should-end? true
-                              :speech (response/simple-speech
+                              :speech (response/plaintext-speech
                                       (str "Stopwatch duration is " (verbal-status watch now)))
                               :card (response/simple-card
                                      "Stopwatch Status"
@@ -61,12 +61,12 @@
 (defn already-watch
   [session]
   (response/respond session {:should-end? true
-                             :speech (response/simple-speech "You already have a stopwatch set.")}))
+                             :speech (response/plaintext-speech "You already have a stopwatch set.")}))
 
 (defn- no-watch
   [session]
   (response/respond session {:should-end? true
-                             :speech (response/simple-speech "No stopwatch is set.")}))
+                             :speech (response/plaintext-speech "No stopwatch is set.")}))
 
 (defn launch
   [request session]

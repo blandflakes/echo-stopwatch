@@ -1,5 +1,6 @@
 (ns stopwatch.ring
-  (:require [ring.logger.timbre :as logger.timbre]
+  (:require [echo-chamber-middleware.authentication :refer [wrap-signature-verifier wrap-timestamp-verifier]]
+            [ring.logger.timbre :as logger.timbre]
             [ring.middleware.defaults :refer [wrap-defaults api-defaults]]
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :as ring-response]))
@@ -20,7 +21,9 @@
   [app-handler]
   (-> app-handler
       contact-point
+      wrap-timestamp-verifier
       wrap-json-response
       (wrap-defaults api-defaults)
       wrap-json-body
+      wrap-signature-verifier
       logger.timbre/wrap-with-logger))
