@@ -52,16 +52,16 @@
   [watch now session]
   (response/respond session {:should-end? true
                               :speech (response/simple-speech
-                                      (str "Your stopwatch is currently at " (verbal-status watch now)))
+                                      (str "Stopwatch duration is " (verbal-status watch now)))
                               :card (response/simple-card
-                                     "Stopwatch Running"
-                                     "Current Time"
+                                     "Stopwatch Status"
+                                     "Duration"
                                      (format-duration watch now))}))
 
 (defn- no-watch
   []
-  (response/respond {:should-end? true
-                      :speech (response/simple-speech "No stopwatch is set.")}))
+  (response/respond session {:should-end? true
+                             :speech (response/simple-speech "No stopwatch is set.")}))
 
 (defn launch
   [request session]
