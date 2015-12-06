@@ -34,4 +34,5 @@
       (wrap-defaults api-defaults)
       wrap-json-body
       wrap-signature-verifier
+      wrap-head
       logger.timbre/wrap-with-logger))
