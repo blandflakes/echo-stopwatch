@@ -5,6 +5,14 @@
             [ring.middleware.json :refer [wrap-json-body wrap-json-response]]
             [ring.util.response :as ring-response]))
 
+(defn wrap-head
+  "Wrapper that intercepts head requests and returns 200 OK."
+  [handler]
+  (fn [request]
+    (if (= :head (:request-method request))
+      {:status 200}
+      (handler request))))
+
 (defn contact-point
   "Manages the contact point between ring middleware and the echo app router.
    Extracts the echo request from the ring request's body, and wraps the echo
