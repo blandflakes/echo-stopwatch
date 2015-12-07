@@ -58,7 +58,7 @@
                                      "Duration"
                                      (format-duration watch now))}))
 
-(defn already-watch
+(defn- already-watch
   [session]
   (response/respond session {:should-end? true
                              :speech (response/plaintext-speech "You already have a stopwatch set.")}))
@@ -68,7 +68,7 @@
   (response/respond session {:should-end? true
                              :speech (response/plaintext-speech "No stopwatch is set.")}))
 
-(defn launch
+(defn- launch
   [request session]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
