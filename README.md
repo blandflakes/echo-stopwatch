@@ -5,10 +5,15 @@ An echo application that allows you to track the duration of something. This ver
 ## Usage
 
 > You: Alexa, open stopwatch
+
 > Alexa: Stopwatch started
+
 > You: Alexa, ask stopwatch for status
-> Alxa: Your stopwatch has a duration of 30 seconds
+
+> Alexa: Your stopwatch has a duration of 30 seconds
+
 > You: Alexa, tell stopwatch to stop
+
 > Alexa: Your stopwatch has a duration of 45 seconds
 
 ## Observations
