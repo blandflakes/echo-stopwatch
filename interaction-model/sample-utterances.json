@@ -1,10 +1,18 @@
 StartStopwatch start a stopwatch
 StartStopwatch start timing me
 StartStopwatch start
+StartStopwatch start my watch
+StartStopwatch begin my watch
+StartStopwatch begin my stopwatch
 StopwatchStatus what is my watch at
+StopwatchStatus what is the status of my watch
+StopwatchStatus how long have you been timing me
 StopwatchStatus how long
 StopwatchStatus status
 StopStopwatch stop my stopwatch
 StopStopwatch stop my watch
 StopStopwatch done
 StopStopwatch stop
+StopStopwatch end my stopwatch
+StopStopwatch end my watch
+StopStopwatch stop timing me

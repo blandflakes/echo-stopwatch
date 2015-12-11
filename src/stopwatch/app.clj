@@ -45,16 +45,17 @@
   (dosync
    (alter watches assoc user-id now))
   (response/respond session {:should-end? true
-                             :speech (response/plaintext-speech "Starting a new stopwatch.")
+                             :speech (response/plaintext-speech
+                                      "Starting a new stopwatch. Launch stopwatch any time to get the status.")
                              :card (response/simple-card "Started stopwatch" nil nil)}))
 
 (defn- watch-status
-  [watch now session]
+  [watch now session stopped?]
   (response/respond session {:should-end? true
                               :speech (response/plaintext-speech
-                                      (str "Stopwatch duration is " (verbal-status watch now)))
+                                      (str (if stopped? "Stopwatch ended at " "Stopwatch duration is ") (verbal-status watch now)))
                               :card (response/simple-card
-                                     "Stopwatch Status"
+                                     (if stopped? "Stopwatch Ended" "Stopwatch Status")
                                      "Duration"
                                      (format-duration watch now))}))
 
@@ -74,7 +75,7 @@
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
     (if existing-watch
-      (watch-status existing-watch now session)
+      (watch-status existing-watch now session false)
       (new-watch user-id now session))))
 
 (defmulti handle-intent (fn [request session] (get-in request ["intent" "name"])))
@@ -94,7 +95,7 @@
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
     (if existing-watch
-      (watch-status existing-watch now session)
+      (watch-status existing-watch now session false)
       (no-watch session))))
        
 (defmethod handle-intent "StopStopwatch"
@@ -106,8 +107,8 @@
       (do
        (dosync
         (alter watches dissoc user-id))
-        (watch-status existing-watch now session))
-      (no-watch))))
+        (watch-status existing-watch now session true))
+      (no-watch session))))
 
 (deftype StopwatchApp []
   echo/IEchoApp
