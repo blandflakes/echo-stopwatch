@@ -23,4 +23,3 @@ Switching on intent name is common - should provide a better mechanism for this.
 ## TODO
 * Support pausing and resuming
 * Offer to start a timer on status request if one isn't set
-* Persist watches instead of holding them in a ref
