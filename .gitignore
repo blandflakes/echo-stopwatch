@@ -1,3 +1,3 @@
 .lein-repl-history
 target/
-watches.edn
+watches.json

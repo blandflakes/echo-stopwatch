@@ -4,7 +4,18 @@
             [simple-time.core :as t]))
 
 ; Map of userId to timestamp
-(def watches (ref {}))
+(def ^:private watches (ref {}))
+
+(defn watches->strs
+  "Returns all current watches as a map of user-id to formatted datetime strings ready for serialization."
+  []
+  (reduce (fn [acc [user-id watch]] (assoc acc user-id (t/format watch))) {} @watches))
+
+(defn strs->watches
+  "Converts a map of user-id to formatted datetime strings to a map of user-id to actual datetimes."
+  [watch-strings]
+  (dosync
+   (ref-set watches (reduce (fn [acc [user-id watch-string]] (assoc acc user-id (t/parse watch-string))) {} watch-strings))))
 
 (defn- include-part?
   "A predicate for whether to include a part of a timespan in the verbal summary of a watch."
@@ -41,33 +52,51 @@
     (format "%02d:%02d:%02d:%02d" days hours minutes seconds)))
 
 (defn- new-watch
-  [user-id now session]
-  (dosync
-   (alter watches assoc user-id now))
-  (response/respond session {:should-end? true
-                             :speech (response/plaintext-speech
-                                      "Starting a new stopwatch. Launch stopwatch any time to get the status.")
-                             :card (response/simple-card "Started stopwatch" nil nil)}))
+  []
+  (response/respond {:should-end? true
+                     :speech (response/plaintext-speech
+                              "Starting a new stopwatch. Launch stopwatch any time to get the status.")
+                     :card (response/simple-card "Started Stopwatch" nil)}))
+
+(defn- stopped-watch
+  [watch now]
+  (response/respond {:should-end? true
+                     :speech (response/plaintext-speech
+                              (str "Stopwatch ended at " (verbal-status watch now)))
+                     :card (response/simple-card
+                            "Stopwatch Ended"
+                            (str "Duration: " (format-duration watch now)))}))
 
 (defn- watch-status
-  [watch now session stopped?]
-  (response/respond session {:should-end? true
-                              :speech (response/plaintext-speech
-                                      (str (if stopped? "Stopwatch ended at " "Stopwatch duration is ") (verbal-status watch now)))
-                              :card (response/simple-card
-                                     (if stopped? "Stopwatch Ended" "Stopwatch Status")
-                                     "Duration"
-                                     (format-duration watch now))}))
+  [watch now]
+  (response/respond {:should-end? true
+                     :speech (response/plaintext-speech
+                              (str "Stopwatch duration is " (verbal-status watch now)))
+                     :card (response/simple-card
+                            "Stopwatch Status"
+                            (str "Duration: " (format-duration watch now)))}))
 
 (defn- already-watch
-  [session]
-  (response/respond session {:should-end? true
-                             :speech (response/plaintext-speech "You already have a stopwatch set.")}))
+  []
+  (response/respond {:should-end? true
+                     :speech (response/plaintext-speech "You already have a stopwatch set.")}))
 
 (defn- no-watch
-  [session]
-  (response/respond session {:should-end? true
-                             :speech (response/plaintext-speech "No stopwatch is set.")}))
+  []
+  (response/respond {:should-end? true
+                     :speech (response/plaintext-speech "No stopwatch is set.")}))
+
+(defn- restarted-watch
+  ([] (response/respond {:should-end? true
+                         :speech (response/plaintext-speech "No stopwatch is set, but I started a new one.")
+                         :card (response/simple-card
+                                "Started Stopwatch" nil)}))
+  ([watch now ] (response/respond {:should-end? true
+                                   :speech (response/plaintext-speech
+                                            (str "Stopwatch restarted. Previous duration was " (verbal-status watch now)))
+                                   :card (response/simple-card
+                                          "Stopwatch Restarted"
+                                          (str "Duration: " (format-duration watch now)))})))
 
 (defn- launch
   [request session]
@@ -75,8 +104,11 @@
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
     (if existing-watch
-      (watch-status existing-watch now session false)
-      (new-watch user-id now session))))
+      (watch-status existing-watch now)
+      (do
+       (dosync
+        (alter watches assoc user-id now))
+       (new-watch)))))
 
 (defmulti handle-intent (fn [request session] (get-in request ["intent" "name"])))
 
@@ -86,8 +118,11 @@
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
     (if existing-watch
-      (already-watch session)
-      (new-watch user-id now session))))
+      (already-watch)
+      (do
+       (dosync
+        (alter watches assoc user-id now))
+       (new-watch)))))
 
 (defmethod handle-intent "StopwatchStatus"
   [request session]
@@ -95,9 +130,9 @@
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
     (if existing-watch
-      (watch-status existing-watch now session false)
-      (no-watch session))))
-       
+      (watch-status existing-watch now)
+      (no-watch))))
+
 (defmethod handle-intent "StopStopwatch"
   [request session]
   (let [now (t/utc-now)
@@ -107,13 +142,26 @@
       (do
        (dosync
         (alter watches dissoc user-id))
-        (watch-status existing-watch now session true))
-      (no-watch session))))
+       (stopped-watch existing-watch now))
+      (no-watch))))
+
+(defmethod handle-intent "ResetStopwatch"
+  [request session]
+  (let [now (t/utc-now)
+        user-id (get-in session ["user" "userId"])
+        existing-watch (get @watches user-id)]
+    ; In either case, we're going to overwrite the existing watch
+    (dosync
+     (alter watches assoc user-id now))
+    ; All that differs is the response
+    (if existing-watch
+      (restarted-watch existing-watch now)
+      (restarted-watch))))
 
 (deftype StopwatchApp []
   echo/IEchoApp
   (on-launch [this request session] (launch request session))
   (on-intent [this request session] (handle-intent request session))
-  (on-end [this request session] :default))
+  (on-end [this request session] (response/respond {:should-end? true})))
 
 (def app-handler (echo/request-dispatcher (StopwatchApp.)))

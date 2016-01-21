@@ -21,7 +21,6 @@
   (fn [request]
     (-> request :body handler ring-response/response)))
 
-
 (defn wrap-handler
   "Generates a ring handler that parses HTTP requests and sends the parsed JSON body
    to the provided app-handler.

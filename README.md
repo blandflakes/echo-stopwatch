@@ -14,7 +14,15 @@ An echo application that allows you to track the duration of something. This ver
 
 > You: Alexa, tell stopwatch to stop
 
-> Alexa: Your stopwatch has a duration of 45 seconds
+> Alexa: Your stopwatch had a duration of 45 seconds
+
+> You: Alexa, reset my stopwach
+
+> Alexa: No stopwatch is set, but I started a new one
+
+> You: Alexa, reset my stopwatch
+
+> Alexa: Stopwatch restarted. Previous duration was 15 seconds
 
 ## Observations
 

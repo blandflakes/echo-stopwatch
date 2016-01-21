@@ -8,6 +8,9 @@
     },
     {
       "intent": "StopStopwatch"
+    },
+    {
+      "intent": "ResetStopwatch"
     }
   ]
 }

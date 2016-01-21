@@ -1,5 +1,6 @@
 (ns stopwatch.core
-  (:require [clojure.java.io :as io]
+  (:require [clojure.data.json :as json]
+            [clojure.java.io :as io]
             [ring.adapter.jetty :as jetty]
             [stopwatch.app :as app]
             [stopwatch.ring :refer [wrap-handler]]
@@ -8,15 +9,14 @@
 
 (def handler (wrap-handler app/app-handler))
 
-(def ^:private DEFAULT-WATCH-FILE "watches.edn")
+(def ^:private DEFAULT-WATCH-FILE "watches.json")
 
 (defn- load-watches
   []
   (let [path (get (System/getenv) "OPENSHIFT_DATA_DIR" DEFAULT-WATCH-FILE)]
     (if (.exists (io/as-file path))
       (try
-       (dosync
-        (ref-set app/watches (read-string (slurp path))))
+       (app/strs->watches (json/read-str (slurp path)))
        (catch Exception e
          (error "Exception reading watches." e)))
       (info (str "No persisted watches found at '" path "'")))))
@@ -24,12 +24,12 @@
 (defn- dump-watches
   []
   (let [path (get (System/getenv) "OPENSHIFT_DATA_DIR" DEFAULT-WATCH-FILE)
-        watches-snapshot @app/watches]
-    (info "Persisting " (count watches-snapshot) " watches.")
+        watches-to-serialize (app/watches->strs)]
+    (info "Persisting " (count watches-to-serialize) " watches.")
     (try
-     (spit path (pr-str watches-snapshot))
+     (spit path (json/write-str watches-to-serialize))
      (catch Exception e
-       (error "Exception persisting existing watches. All watches will be lost. Attempted to write to '" path "'")))))
+       (error (str "Exception persisting existing watches. All watches will be lost. Attempted to write to '" path "'") e)))))
 
 (defn -main
   []
