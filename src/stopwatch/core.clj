@@ -9,27 +9,27 @@
 
 (def handler (wrap-handler app/app-handler))
 
-(def ^:private DEFAULT-WATCH-FILE "watches.json")
+(def ^:private WATCH-FILE "watches.json")
+
+(def ^:private watches-location (str (get (System/getenv) "OPENSHIFT_DATA_DIR" ".") "/" WATCH-FILE))
 
 (defn- load-watches
   []
-  (let [path (get (System/getenv) "OPENSHIFT_DATA_DIR" DEFAULT-WATCH-FILE)]
-    (if (.exists (io/as-file path))
-      (try
-       (app/strs->watches (json/read-str (slurp path)))
-       (catch Exception e
-         (error "Exception reading watches." e)))
-      (info (str "No persisted watches found at '" path "'")))))
+  (if (.exists (io/as-file watches-location))
+    (try
+     (app/strs->watches (json/read-str (slurp watches-location)))
+     (catch Exception e
+       (error "Exception reading watches." e)))
+    (info (str "No persisted watches found at '" watches-location "'"))))
 
 (defn- dump-watches
   []
-  (let [path (get (System/getenv) "OPENSHIFT_DATA_DIR" DEFAULT-WATCH-FILE)
-        watches-to-serialize (app/watches->strs)]
+  (let [watches-to-serialize (app/watches->strs)]
     (info "Persisting " (count watches-to-serialize) " watches.")
     (try
-     (spit path (json/write-str watches-to-serialize))
+     (spit watches-location (json/write-str watches-to-serialize))
      (catch Exception e
-       (error (str "Exception persisting existing watches. All watches will be lost. Attempted to write to '" path "'") e)))))
+       (error (str "Exception persisting existing watches. All watches will be lost. Attempted to write to '" watches-location "'") e)))))
 
 (defn -main
   []
