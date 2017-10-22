@@ -2,7 +2,7 @@
   :description "This is an Echo app server that hosts a stopwatch application."
   :url "https://github.com/blandflakes/echo-stopwatch"
   :min-lein-version "2.0.0"
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.8.0"]
                  [com.taoensso/timbre "4.3.1"]
                  [echo-chamber "0.2.0"]
                  [echo-chamber-middleware "0.1.6"]

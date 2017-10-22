@@ -1,3 +1,5 @@
 .lein-repl-history
 target/
 watches.json
+*.iml
+.idea/

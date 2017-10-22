@@ -9,9 +9,8 @@
 
 (def handler (wrap-handler app/app-handler))
 
-(def ^:private WATCH-FILE "watches.json")
+(def ^:private watches-location (System/getProperty "watchesfile" "watches.json"))
 
-(def ^:private watches-location (str (get (System/getenv) "OPENSHIFT_DATA_DIR" ".") "/" WATCH-FILE))
 
 (defn- load-watches
   []
@@ -25,7 +24,7 @@
 (defn- dump-watches
   []
   (let [watches-to-serialize (app/watches->strs)]
-    (info "Persisting " (count watches-to-serialize) " watches.")
+    (info "Persisting" (count watches-to-serialize) "watches to '" watches-location "'")
     (try
      (spit watches-location (json/write-str watches-to-serialize))
      (catch Exception e
@@ -33,8 +32,8 @@
 
 (defn -main
   []
-  (let [ip (get (System/getenv) "OPENSHIFT_CLOJURE_HTTP_IP" "0.0.0.0")
-        port (Integer/parseInt (get (System/getenv) "OPENSHIFT_CLOJURE_HTTP_PORT" "8080"))]
+  (let [ip (get (System/getenv) "HTTP_IP" "0.0.0.0")
+        port (Integer/parseInt (get (System/getenv) "HTTP_PORT" "8080"))]
     (load-watches)
     (.addShutdownHook (Runtime/getRuntime) (Thread. dump-watches))
     (jetty/run-jetty handler {:host ip :port port})))
