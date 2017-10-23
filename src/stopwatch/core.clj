@@ -16,14 +16,14 @@
   []
   (if (.exists (io/as-file watches-location))
     (try
-     (app/strs->watches (json/read-str (slurp watches-location)))
+     (app/primitives->watches (json/read-str (slurp watches-location)))
      (catch Exception e
        (error "Exception reading watches." e)))
     (info (str "No persisted watches found at '" watches-location "'"))))
 
 (defn- dump-watches
   []
-  (let [watches-to-serialize (app/watches->strs)]
+  (let [watches-to-serialize (app/watches->primitives)]
     (info "Persisting" (count watches-to-serialize) "watches to '" watches-location "'")
     (try
      (spit watches-location (json/write-str watches-to-serialize))
@@ -32,7 +32,7 @@
 
 (defn -main
   []
-  (let [ip (get (System/getenv) "HTTP_IP" "0.0.0.0")
+  (let [ip (get (System/getenv) "HTTP_IP" "127.0.0.1")
         port (Integer/parseInt (get (System/getenv) "HTTP_PORT" "8080"))]
     (load-watches)
     (.addShutdownHook (Runtime/getRuntime) (Thread. dump-watches))

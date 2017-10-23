@@ -24,10 +24,17 @@ An echo application that allows you to track the duration of something. This ver
 
 > Alexa: Stopwatch restarted. Previous duration was 15 seconds
 
+> You: Alexa, pause my stopwatch
+
+> Alexa: Stopwatch paused at 5 seconds
+
+> You: Alexa, resume my stopwatch
+
+> Alexa: Stopwatch resumed.
+
 ## Observations
 
 Switching on intent name is common - should provide a better mechanism for this.
 
 ## TODO
-* Support pausing and resuming
 * Offer to start a timer on status request if one isn't set
