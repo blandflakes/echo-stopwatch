@@ -54,7 +54,7 @@
       (responses/watch-status (elapsed existing-watch now) (:started existing-watch))
       (do
         (dosync
-          (alter watches assoc user-id now))
+          (alter watches assoc user-id {:started now}))
         (responses/new-watch)))))
 
 (defmulti handle-intent (fn [request session] (get-in request ["intent" "name"])))
