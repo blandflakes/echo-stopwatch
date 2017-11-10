@@ -46,7 +46,7 @@
     (t/+ current-elapsed prev-duration)))
 
 (defn- launch
-  [request session]
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -57,10 +57,8 @@
           (alter watches assoc user-id {:started now}))
         (responses/new-watch)))))
 
-(defmulti handle-intent (fn [request session] (get-in request ["intent" "name"])))
-
-(defmethod handle-intent "StartStopwatch"
-  [request session]
+(defn start
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -71,8 +69,8 @@
           (alter watches assoc user-id {:started now}))
         (responses/new-watch)))))
 
-(defmethod handle-intent "StopwatchStatus"
-  [request session]
+(defn status
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -80,8 +78,8 @@
       (responses/watch-status (elapsed existing-watch now) (:started existing-watch))
       (responses/no-watch))))
 
-(defmethod handle-intent "StopStopwatch"
-  [request session]
+(defn stop
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -92,8 +90,8 @@
         (responses/stopped-watch (elapsed existing-watch now)))
       (responses/no-watch))))
 
-(defmethod handle-intent "ResetStopwatch"
-  [request session]
+(defn reset
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -105,8 +103,8 @@
       (responses/restarted-watch (elapsed existing-watch now))
       (responses/no-watch true))))
 
-(defmethod handle-intent "PauseStopwatch"
-  [request session]
+(defn pause
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -118,8 +116,8 @@
         (responses/already-paused-watch (:duration existing-watch)))
       (responses/no-watch))))
 
-(defmethod handle-intent "ResumeStopwatch"
-  [request session]
+(defn resume
+  [{:strs [request session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -134,10 +132,14 @@
         (dosync (alter watches assoc user-id {:started now}))
         (responses/no-watch true)))))
 
-(deftype StopwatchApp []
-  echo/IEchoApp
-  (on-launch [this request session] (launch request session))
-  (on-intent [this request session] (handle-intent request session))
-  (on-end [this request session] (response/respond {:should-end? true})))
 
-(def app-handler (echo/request-dispatcher (StopwatchApp.)))
+(def skill-spec {:requests {echo/launch launch
+                            echo/end-session (fn [_] (response/respond {:should-end? true}))}
+                 :intents {"StartStopwatch" start
+                           "PauseStopwatch" pause
+                           "ResumeStopwatch" resume
+                           "ResetStopwatch" reset
+                           "StopStopwatch" stop
+                           "StopwatchStatus" status}})
+
+(def app-handler (echo/request-dispatcher skill-spec))
