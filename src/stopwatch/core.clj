@@ -4,7 +4,8 @@
             [ring.adapter.jetty :as jetty]
             [stopwatch.app :as app]
             [stopwatch.ring :refer [wrap-handler]]
-            [taoensso.timbre :refer [error info]])
+            [taoensso.timbre :refer [error info]]
+            [taoensso.timbre :as timbre])
   (:gen-class :main true))
 
 (def handler (wrap-handler app/app-handler))
@@ -32,6 +33,7 @@
 
 (defn -main
   []
+  (timbre/set-level! :warn)
   (let [ip (get (System/getenv) "HTTP_IP" "127.0.0.1")
         port (Integer/parseInt (get (System/getenv) "HTTP_PORT" "8080"))]
     (load-watches)
