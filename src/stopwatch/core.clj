@@ -1,21 +1,20 @@
 (ns stopwatch.core
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
-            [ring.adapter.jetty :as jetty]
             [stopwatch.app :as app]
-            [stopwatch.ring :refer [wrap-handler]]
+            [echo-chamber-server.server :refer [app-server]]
+            [echo-chamber-server.verifiers.timestamp :as timestamp]
+            [echo-chamber-server.verifiers.signature :as signature]
             [taoensso.timbre :refer [error info]]
             [taoensso.timbre :as timbre])
-  (:gen-class :main true))
-
-(def handler (wrap-handler app/app-handler))
+  (:gen-class :main true)
+  (:import (java.io File)))
 
 (def ^:private watches-location (System/getProperty "watchesfile" "watches.json"))
 
-
 (defn- load-watches
   []
-  (if (.exists (io/as-file watches-location))
+  (if (.exists ^File (io/as-file watches-location))
     (try
      (app/primitives->watches (json/read-str (slurp watches-location)))
      (catch Exception e
@@ -37,5 +36,8 @@
   (let [ip (get (System/getenv) "HTTP_IP" "127.0.0.1")
         port (Integer/parseInt (get (System/getenv) "HTTP_PORT" "8080"))]
     (load-watches)
-    (.addShutdownHook (Runtime/getRuntime) (Thread. dump-watches))
-    (jetty/run-jetty handler {:host ip :port port})))
+    (let [backend (app-server ip port {:skill-fn app/skill :verifiers [(signature/verifier) (timestamp/verifier)]})]
+      (.addShutdownHook (Runtime/getRuntime) (Thread. ^Runnable (fn []
+                                                        (dump-watches)
+                                                        ((:stop backend)))))
+      ((:start backend)))))

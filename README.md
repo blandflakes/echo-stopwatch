@@ -32,9 +32,6 @@ An echo application that allows you to track the duration of something. This ver
 
 > Alexa: Stopwatch resumed.
 
-## Observations
-
-Switching on intent name is common - should provide a better mechanism for this.
-
 ## TODO
 * Offer to start a timer on status request if one isn't set
+* Persist watches to a database instead of to a file on shutdown
