@@ -1,5 +1,6 @@
 (ns stopwatch.app
   (:require [echo.core :as echo]
+            [echo.match :refer [request-type intent]]
             [stopwatch.responses :as responses]
             [simple-time.core :as t]
             [echo.response :as response]))
@@ -46,7 +47,7 @@
     (t/+ current-elapsed prev-duration)))
 
 (defn- launch
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -58,7 +59,7 @@
         (responses/new-watch)))))
 
 (defn start
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -70,7 +71,7 @@
         (responses/new-watch)))))
 
 (defn status
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -79,7 +80,7 @@
       (responses/no-watch))))
 
 (defn stop
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -91,7 +92,7 @@
       (responses/no-watch))))
 
 (defn reset
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -104,7 +105,7 @@
       (responses/no-watch true))))
 
 (defn pause
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -117,7 +118,7 @@
       (responses/no-watch))))
 
 (defn resume
-  [{:strs [request session]}]
+  [{:strs [session]}]
   (let [now (t/utc-now)
         user-id (get-in session ["user" "userId"])
         existing-watch (get @watches user-id)]
@@ -132,14 +133,12 @@
         (dosync (alter watches assoc user-id {:started now}))
         (responses/no-watch true)))))
 
-
-(def skill-spec {:requests {echo/launch launch
-                            echo/end-session (fn [_] (response/respond {:should-end? true}))}
-                 :intents {"StartStopwatch" start
-                           "PauseStopwatch" pause
-                           "ResumeStopwatch" resume
-                           "ResetStopwatch" reset
-                           "StopStopwatch" stop
-                           "StopwatchStatus" status}})
-
-(def app-handler (echo/request-dispatcher skill-spec))
+(def skill (echo/skill
+             (request-type "LaunchRequest") launch
+             (request-type "SessionEndedRequest") (fn [_] (response/respond (response/end-session true)))
+             (intent "StartStopwatch") start
+             (intent "PauseStopwatch") pause
+             (intent "ResumeStopwatch") resume
+             (intent "ResetStopwatch") reset
+             (intent "StopStopwatch") stop
+             (intent "StopwatchStatus") status))
