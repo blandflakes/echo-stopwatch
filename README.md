@@ -32,6 +32,7 @@ An echo application that allows you to track the duration of something. This ver
 
 > Alexa: Stopwatch resumed.
 
-## TODO
-* Offer to start a timer on status request if one isn't set
-* Persist watches to a database instead of to a file on shutdown
+## Potential future work:
+
+* Rewrite this as a serverless application (`echo-chamber` should still be useful, even if the server
+support isn't) to reduce operational burden. Store watches in a cloud database.
